@@ -1,0 +1,178 @@
+<html>
+<head>
+    <meta charset='utf-8' />
+    <title></title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.42.1/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.42.1/mapbox-gl.css' rel='stylesheet' />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.2.0/dist/leaflet.css"
+      integrity="sha512-M2wvCLH6DSRazYeZRIm1JnYyh22purTM+FDB5CsyxtQJYeKq83arPe5wgbNmcFXGqiSH2XR8dT/fJISVA1r/zQ=="
+      crossorigin=""/>
+<!-- https://github.com/smeijer/leaflet-geosearch/issues/126 -->
+<!--    <link rel="stylesheet" href="https://unpkg.com/leaflet-geosearch@2.5.1/dist/style.css"/> -->
+    <link rel="stylesheet" href="assets/leaflet.css"/>
+    <link rel="stylesheet" href="assets/leaflet-control-geocoder-1.5.7/dist/Control.Geocoder.css" />
+    <link rel="stylesheet" href="assets/map.css"/>
+    
+    
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+      }
+
+      #map {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+      }
+    </style>
+</head>
+<body>
+  <div id='map'></div>
+    
+    <script src="https://unpkg.com/leaflet@1.2.0/dist/leaflet.js"
+      integrity="sha512-lInM/apFSqyy1o6s89K4iQUKg6ppXEgsVxT35HbzUupEVRh2Eu9Wdl4tHj7dZO0s1uvplcYGmt3498TtHq+log=="
+      crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet-geosearch@2.5.1/dist/bundle.min.js"></script>
+    
+  <script>
+    
+  
+      mapboxgl.accessToken = 'pk.eyJ1IjoiYXN0dXJrc2V2ZXIiLCJhIjoiY2phc3RxcDMwNWplMzJxcWU3czU0Y2h4dCJ9.5n4mFf5CjtQFswExutyb9A';
+      
+    var map = new mapboxgl.Map({
+      container: 'map',
+      style: 'mapbox://styles/mapbox/dark-v9',
+      center: [29.03, 41.0820], 
+      zoom: 9
+    });
+  
+      
+      
+
+
+      
+   map.on('load', function() {
+
+  map.addSource('wheel', {
+    type: 'geojson',
+    data: './wheel.geojson'
+  });
+  // add heatmap layer here
+       map.addLayer({
+  id: 'wheel-heat',
+  type: 'heatmap',
+  source: 'wheel',
+  maxzoom: 22,
+  paint: {
+    // increase weight as diameter breast height increases
+    'heatmap-weight': {
+      property: 'wheelchair',
+      type: 'exponential',
+      stops: [
+        [1, 0],
+        [62, 1]
+      ]
+    },
+    // increase intensity as zoom level increases
+    'heatmap-intensity': {
+      stops: [
+        [11, 1],
+        [15, 3]
+      ]
+    },
+    // assign color values be applied to points depending on their density
+    'heatmap-color': [
+      'interpolate',
+      ['linear'],
+      ['heatmap-density'],
+      0, 'rgba(236,222,239,0)',
+      0.2, 'rgb(208,209,230)',
+      0.4, 'rgb(166,189,219)',
+      0.6, 'rgb(103,169,207)',
+      0.8, 'rgb(28,144,153)'
+    ],
+    // increase radius as zoom increases
+    'heatmap-radius': {
+      stops: [
+        [11, 15],
+        [15, 20]
+      ]
+    },
+    // decrease opacity to transition into the circle layer
+    'heatmap-opacity': {
+      default: 1,
+      stops: [
+        [14, 1],
+        [15, 0]
+      ]
+    },
+  }
+}, 'waterway-label');
+
+  // add circle layer here
+       
+       
+       map.addLayer({
+  id: 'wheelchair',
+  type: 'circle',
+  source: 'wheel',
+  minzoom: 14,
+  paint: {
+    // increase the radius of the circle as the zoom level and dbh value increases
+    'circle-radius': {
+      property: 'wheelchair',
+      type: 'exponential',
+      stops: [
+        [{ zoom: 15, value: 1 }, 5],
+        [{ zoom: 15, value: 62 }, 10],
+        [{ zoom: 22, value: 1 }, 20],
+        [{ zoom: 22, value: 62 }, 50],
+      ]
+    },
+    'circle-color': {
+      property: 'wheelchair',
+      type: 'exponential',
+      stops: [
+        [0, 'rgba(236,222,239,0)'],
+        [10, 'rgb(236,222,239)'],
+        [20, 'rgb(208,209,230)'],
+        [30, 'rgb(166,189,219)'],
+        [40, 'rgb(103,169,207)'],
+        [50, 'rgb(28,144,153)'],
+        [60, 'rgb(1,108,89)']
+      ]
+    },
+    'circle-stroke-color': 'white',
+    'circle-stroke-width': 1,
+    'circle-opacity': {
+      stops: [
+        [14, 0],
+        [15, 1]
+      ]
+    }
+  }
+}, 'waterway-label');
+
+       map.on('click', 'wheelchair', function(e) {
+  new mapboxgl.Popup()
+    .setLngLat(e.features[0].geometry.coordinates)
+    .setHTML('<b>name:</b> ' + e.features[0].properties.name)
+    .setHTML('<b>Wheelchair access:</b> ' + e.features[0].properties.wheelchair) 
+    .addTo(map);
+});
+       
+     
+       
+       
+});
+
+  
+      
+  </script>
+     <script src="assets/leaflet-control-geocoder-1.5.7/dist/Control.Geocoder.js"></script>
+
+</body>
+</html>
